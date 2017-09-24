@@ -48,9 +48,13 @@ let getGenesisBlock = () => {
  */
 let blockchain = [getGenesisBlock()];
 
+/**
+ * Set up HTTP server. 
+ */
 let initHttpServer = () => {
   let app = express();
   app.use(bodyParser.json());
+  
   app.get('/blocks', (req, res) => res.send(JSON.stringify(blockchain)));
   app.post('/mineBlock', (req, res) => {
     let newBlock = generateNextBlock(req.body.data);
