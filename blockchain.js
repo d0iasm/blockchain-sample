@@ -1,10 +1,11 @@
 'use strict';
 
-const CryptoJS = require("crypto-js");
-const express = require("express");
+const art = require('ascii-art');
 const bodyParser = require('body-parser');
-const WebSocket = require("ws");
-const util = require("util");
+const crypto = require('crypto-js');
+const express = require('express');
+const util = require('util');
+const websocket = require('ws');
 
 const http_port = process.env.HTTP_PORT || 3001;
 const p2p_port = process.env.P2P_PORT || 6001;
@@ -56,9 +57,9 @@ const MessageType = {
  * Generate a first block. Genesis blcok is 1465154705.
  */
 const getGenesisBlock = () => {
-  return new Block(0, "0", 1465154705,
+  return new Block(0, '0', 1465154705,
                    new Image(100, 100, 100),
-                   "816534932c2b7154836da6afc367695e6337db8a921823784c14378abed4f7d7");
+                   '816534932c2b7154836da6afc367695e6337db8a921823784c14378abed4f7d7');
 };
 
 /**
@@ -73,7 +74,9 @@ const initHttpServer = () => {
   const app = express();
   app.use(bodyParser.json());
   
-  app.get('/blocks', (req, res) => res.send(JSON.stringify(blockchain)));
+  app.get('/blocks', (req, res) => {
+    res.send(blockchain.map(b => art.style(b, 'red+bold')));
+  });
   app.post('/mineBlock', (req, res) => {
     const newBlock = generateNextBlock(req.body.data);
     addBlock(newBlock);
@@ -95,21 +98,21 @@ const initHttpServer = () => {
  * Set up Web socket server.
  */
 const initP2PServer = () => {
-  const server = new WebSocket.Server({port: p2p_port});
+  const server = new websocket.Server({port: p2p_port});
   server.on('connection', ws => initConnection(ws));
   console.log('Listening websocket p2p port on: ' + p2p_port);
 };
 
 /**
  * Connect a init socket.
- * @param {WebSocket} ws A socket.
+ * @param {Websocket} ws A socket.
  */
 const initConnection = (ws) => {
   sockets.push(ws);
   initMessageHandler(ws);
   initErrorHandler(ws);
   write(ws, queryChainLengthMsg());
-  console.log('Init connection: ' + util.inspect(ws));
+  // console.log('Init connection: ' + util.inspect(ws));
 };
 
 const initMessageHandler = (ws) => {
@@ -168,7 +171,7 @@ const calculateHashForBlock = (block) => {
 };
 
 const calculateHash = (index, previousHash, timestamp, data) => {
-  return CryptoJS.SHA256(index + previousHash + timestamp + data).toString();
+  return crypto.SHA256(index + previousHash + timestamp + data).toString();
 };
 
 /**
@@ -201,7 +204,7 @@ const isValidNewBlock = (newBlock, previousBlock) => {
 
 const connectToPeers = (newPeers) => {
   newPeers.forEach((peer) => {
-    const ws = new WebSocket(peer);
+    const ws = new websocket(peer);
     ws.on('open', () => initConnection(ws));
     ws.on('error', () => {
       console.log('connection failed');
@@ -216,14 +219,14 @@ const handleBlockchainResponse = (message) => {
   if (latestBlockReceived.index > latestBlockHeld.index) {
     console.log('blockchain possibly behind. We got: ' + latestBlockHeld.index + ' Peer got: ' + latestBlockReceived.index);
     if (latestBlockHeld.hash === latestBlockReceived.previousHash) {
-      console.log("We can append the received block to our chain");
+      console.log('We can append the received block to our chain');
       blockchain.push(latestBlockReceived);
       broadcast(responseLatestMsg());
     } else if (receivedBlocks.length === 1) {
-      console.log("We have to query the chain from our peer");
+      console.log('We have to query the chain from our peer');
       broadcast(queryAllMsg());
     } else {
-      console.log("Received blockchain is longer than current blockchain");
+      console.log('Received blockchain is longer than current blockchain');
       replaceChain(receivedBlocks);
     }
   } else {
