@@ -72,14 +72,13 @@ const initHttpServer = () => {
   app.use(bodyParser.json());
   
   app.get('/blocks', (req, res) => {
-    res.send(blockchain.map(b => art.font(b.data.getDataAsString(),
-                                          'doom', b.data.getDataAsString(),
-                                          function(rendered) {
-                                            console.log(rendered);
-                                          })
-                           )
-            );
-      // art.style(b.data.getDataAsString(), 'bold', b.data.getDataAsString());
+    // TODO: TypeError: blockchain[(blockchain.length - 1)].data.getDataAsString is not a function
+    console.log(blockchain.length);
+    art.font(blockchain[blockchain.length - 1].data.getDataAsString(), 'doom',
+             blockchain[blockchain.length - 1].data.getDataAsString(),
+             function(rendered) {
+               res.send(rendered);
+             });
   });
   app.post('/mineBlock', (req, res) => {
     const newBlock = generateNextBlock(req.body.data);
