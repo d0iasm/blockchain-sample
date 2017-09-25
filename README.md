@@ -9,11 +9,19 @@ HTTP_PORT=3002 P2P_PORT=6002 PEERS=ws://localhost:6001 npm start
 
 ### Create a new block
 
+#### From 3002 to 3001
+
 ```
 curl -H "Content-type:application/json" --data '{"data" : "green"}' http://localhost:3001/mineBlock
 ```
 
-### Show blocks
+#### From 3001 to 3002
+
+```
+curl -H "Content-type:application/json" --data '{"data" : "blue"}' http://localhost:3002/mineBlock
+```
+
+### Show a latest image
 
 ```
 curl http://localhost:3001/blocks
