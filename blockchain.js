@@ -11,6 +11,21 @@ const p2p_port = process.env.P2P_PORT || 6001;
 const initialPeers = process.env.PEERS ? process.env.PEERS.split(',') : [];
 
 /**
+ * The structure of a image.
+ */
+class Image {
+  constructor(r, g, b) {
+    this.r = r;
+    this.g = g;
+    this.b = b;
+  }
+
+  getDataAsString() {
+    return String(this.r + ' ' +  this.g + ' ' + this.b);
+  }
+}
+
+/**
  * The structure of a block.
  */
 class Block {
@@ -18,7 +33,7 @@ class Block {
    * @param {number} index
    * @param {!Object} previousHash
    * @param {number} timestamp
-   * @param {string} data
+   * @param {!Image} data
    * @param {!Object} hash
    */
   constructor(index, previousHash, timestamp, data, hash) {
@@ -41,7 +56,9 @@ const MessageType = {
  * Generate a first block. Genesis blcok is 1465154705.
  */
 const getGenesisBlock = () => {
-  return new Block(0, "0", 1465154705, "my genesis block!!", "816534932c2b7154836da6afc367695e6337db8a921823784c14378abed4f7d7");
+  return new Block(0, "0", 1465154705,
+                   new Image(100, 100, 100),
+                   "816534932c2b7154836da6afc367695e6337db8a921823784c14378abed4f7d7");
 };
 
 /**
@@ -130,19 +147,24 @@ const initErrorHandler = (ws) => {
 
 /**
  * Generate a new block.
- * @param {string} blockData data from a user
+ * @param {string} colorData data from a user
  * @return {Block} A new block.
  */
-const generateNextBlock = (blockData) => {
+const generateNextBlock = (colorData) => {
+  console.log('Color data: ' + colorData);
+  const colors = colorData.split(' ');
   const previousBlock = getLatestBlock();
   const nextIndex = previousBlock.index + 1;
   const nextTimestamp = new Date().getTime() / 1000;
-  const nextHash = calculateHash(nextIndex, previousBlock.hash, nextTimestamp, blockData);
-  return new Block(nextIndex, previousBlock.hash, nextTimestamp, blockData, nextHash);
+  const nextHash = calculateHash(nextIndex, previousBlock.hash, nextTimestamp, colorData);
+  return new Block(nextIndex, previousBlock.hash, nextTimestamp,
+                   new Image(colors[0], colors[1], colors[2]), nextHash);
 };
 
 const calculateHashForBlock = (block) => {
-  return calculateHash(block.index, block.previousHash, block.timestamp, block.data);
+  console.log('Get data as string: ' + block.data.getDataAsString());
+  return calculateHash(block.index, block.previousHash,
+                       block.timestamp, block.data.getDataAsString());
 };
 
 const calculateHash = (index, previousHash, timestamp, data) => {
