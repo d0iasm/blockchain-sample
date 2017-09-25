@@ -4,6 +4,7 @@ const CryptoJS = require("crypto-js");
 const express = require("express");
 const bodyParser = require('body-parser');
 const WebSocket = require("ws");
+const util = require("util");
 
 const http_port = process.env.HTTP_PORT || 3001;
 const p2p_port = process.env.P2P_PORT || 6001;
@@ -79,7 +80,7 @@ const initHttpServer = () => {
 const initP2PServer = () => {
   const server = new WebSocket.Server({port: p2p_port});
   server.on('connection', ws => initConnection(ws));
-  console.log('listening websocket p2p port on: ' + p2p_port);
+  console.log('Listening websocket p2p port on: ' + p2p_port);
 };
 
 /**
@@ -91,6 +92,7 @@ const initConnection = (ws) => {
   initMessageHandler(ws);
   initErrorHandler(ws);
   write(ws, queryChainLengthMsg());
+  console.log('Init connection: ' + util.inspect(ws));
 };
 
 const initMessageHandler = (ws) => {
