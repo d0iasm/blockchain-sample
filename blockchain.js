@@ -24,6 +24,18 @@ class Image {
   }
 }
 
+const createImage = (req, res) => {
+  console.log(blockchain.length);
+  console.log(sockets.length);
+  console.log(blockchain[blockchain.length - 1]);
+  console.log(blockchain[sockets.length - 1]);
+  art.font(getLatestBlock().data.getDataAsString(), 'doom',
+           getLatestBlock().data.getDataAsString(),
+           function(rendered) {
+             res.send(rendered);
+           });
+};
+
 /**
  * The structure of a block.
  */
@@ -72,13 +84,7 @@ const initHttpServer = () => {
   app.use(bodyParser.json());
   
   app.get('/blocks', (req, res) => {
-    // TODO: TypeError: blockchain[(blockchain.length - 1)].data.getDataAsString is not a function
-    console.log(blockchain.length);
-    art.font(blockchain[blockchain.length - 1].data.getDataAsString(), 'doom',
-             blockchain[blockchain.length - 1].data.getDataAsString(),
-             function(rendered) {
-               res.send(rendered);
-             });
+    createImage(req, res);
   });
   app.post('/mineBlock', (req, res) => {
     const newBlock = generateNextBlock(req.body.data);
@@ -214,8 +220,18 @@ const connectToPeers = (newPeers) => {
 
 const handleBlockchainResponse = (message) => {
   const receivedBlocks = JSON.parse(message.data).sort((b1, b2) => (b1.index - b2.index));
+  // const receivedBlocks = message.data.sort((b1, b2) => (b1.index - b2.index));
   const latestBlockReceived = receivedBlocks[receivedBlocks.length - 1];
-  const latestBlockHeld = getLatestBlock();
+  let latestBlockHeld = getLatestBlock();
+
+  console.log('receivedBlocks; ' + JSON.stringify(receivedBlocks));
+  console.log('latestBlockReceived; ' + JSON.stringify(latestBlockReceived));
+  console.log('latestBlockHeld; ' + JSON.stringify(latestBlockHeld));
+
+  latestBlockHeld.data = new Image(latestBlockHeld.data.color);
+
+  console.log('latestBlockHeld; ' + JSON.stringify(latestBlockHeld));
+  
   if (latestBlockReceived.index > latestBlockHeld.index) {
     console.log('blockchain possibly behind. We got: ' + latestBlockHeld.index + ' Peer got: ' + latestBlockReceived.index);
     if (latestBlockHeld.hash === latestBlockReceived.previousHash) {
