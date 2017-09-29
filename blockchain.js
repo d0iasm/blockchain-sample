@@ -220,7 +220,6 @@ const connectToPeers = (newPeers) => {
 
 const handleBlockchainResponse = (message) => {
   const receivedBlocks = JSON.parse(message.data).sort((b1, b2) => (b1.index - b2.index));
-  // const receivedBlocks = message.data.sort((b1, b2) => (b1.index - b2.index));
   const latestBlockReceived = receivedBlocks[receivedBlocks.length - 1];
   let latestBlockHeld = getLatestBlock();
 
@@ -228,10 +227,8 @@ const handleBlockchainResponse = (message) => {
   console.log('latestBlockReceived; ' + JSON.stringify(latestBlockReceived));
   console.log('latestBlockHeld; ' + JSON.stringify(latestBlockHeld));
 
-  latestBlockHeld.data = new Image(latestBlockHeld.data.color);
+  latestBlockReceived.data = new Image(latestBlockReceived.data.color);
 
-  console.log('latestBlockHeld; ' + JSON.stringify(latestBlockHeld));
-  
   if (latestBlockReceived.index > latestBlockHeld.index) {
     console.log('blockchain possibly behind. We got: ' + latestBlockHeld.index + ' Peer got: ' + latestBlockReceived.index);
     if (latestBlockHeld.hash === latestBlockReceived.previousHash) {
