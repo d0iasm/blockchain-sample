@@ -26,3 +26,15 @@ curl -H "Content-type:application/json" --data '{"data" : "blue"}' http://localh
 ```
 curl http://localhost:3001/blocks
 ```
+
+### Add peer
+
+```
+curl -H "Content-type:application/json" --data '{"peer" : "ws://localhost:6001"}' http://localhost:3001/addPeer
+```
+
+### Query connected peers
+
+```
+curl http://localhost:3001/peers
+```
