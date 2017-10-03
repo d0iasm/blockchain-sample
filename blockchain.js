@@ -3,6 +3,7 @@
 const art = require('ascii-art');
 const bodyParser = require('body-parser');
 const crypto = require('crypto-js');
+const cv = require('opencv');
 const express = require('express');
 const util = require('util');
 const websocket = require('ws');
