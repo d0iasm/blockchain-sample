@@ -1,4 +1,5 @@
-# Blackchain Sample
+# Distributed Network
+Create blockchain.
 
 ### Start
 

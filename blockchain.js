@@ -1,9 +1,7 @@
 'use strict';
 
-const art = require('ascii-art');
 const bodyParser = require('body-parser');
 const crypto = require('crypto-js');
-const cv = require('opencv');
 const express = require('express');
 const util = require('util');
 const websocket = require('ws');
@@ -13,31 +11,6 @@ const p2p_port = process.env.P2P_PORT || 6001;
 const initialPeers = process.env.PEERS ? process.env.PEERS.split(',') : [];
 
 /**
- * The structure of a image.
- */
-class Image {
-  constructor(color) {
-    this.color = color;
-  }
-
-  getDataAsString() {
-    return String(this.color);
-  }
-}
-
-const createImage = (req, res) => {
-  console.log(blockchain.length);
-  console.log(sockets.length);
-  console.log(blockchain[blockchain.length - 1]);
-  console.log(blockchain[sockets.length - 1]);
-  art.font(getLatestBlock().data.getDataAsString(), 'doom',
-           getLatestBlock().data.getDataAsString(),
-           function(rendered) {
-             res.send(rendered);
-           });
-};
-
-/**
  * The structure of a block.
  */
 class Block {
@@ -45,7 +18,7 @@ class Block {
    * @param {number} index
    * @param {!Object} previousHash
    * @param {number} timestamp
-   * @param {!Image} data
+   * @param {string} data
    * @param {!Object} hash
    */
   constructor(index, previousHash, timestamp, data, hash) {
@@ -68,7 +41,7 @@ const MessageType = {
  * Generate a first block. Genesis blcok is 1465154705.
  */
 const getGenesisBlock = () => {
-  return new Block(0, '0', 1465154705, new Image("red"),
+  return new Block(0, '0', 1465154705, 'red',
                    '816534932c2b7154836da6afc367695e6337db8a921823784c14378abed4f7d7');
 };
 
@@ -84,9 +57,7 @@ const initHttpServer = () => {
   const app = express();
   app.use(bodyParser.json());
   
-  app.get('/blocks', (req, res) => {
-    createImage(req, res);
-  });
+  app.get('/blocks', (req, res) => res.send(JSON.stringify(blockchain)));
   app.post('/mineBlock', (req, res) => {
     const newBlock = generateNextBlock(req.body.data);
     addBlock(newBlock);
@@ -122,7 +93,6 @@ const initConnection = (ws) => {
   initMessageHandler(ws);
   initErrorHandler(ws);
   write(ws, queryChainLengthMsg());
-  // console.log('Init connection: ' + util.inspect(ws));
 };
 
 const initMessageHandler = (ws) => {
@@ -160,21 +130,19 @@ const initErrorHandler = (ws) => {
 
 /**
  * Generate a new block.
- * @param {string} colorData data from a user
+ * @param {string} data data from a user
  * @return {Block} A new block.
  */
-const generateNextBlock = (colorData) => {
+const generateNextBlock = (data) => {
   const previousBlock = getLatestBlock();
   const nextIndex = previousBlock.index + 1;
   const nextTimestamp = new Date().getTime() / 1000;
-  const nextHash = calculateHash(nextIndex, previousBlock.hash, nextTimestamp, colorData);
-  return new Block(nextIndex, previousBlock.hash, nextTimestamp,
-                   new Image(colorData), nextHash);
+  const nextHash = calculateHash(nextIndex, previousBlock.hash, nextTimestamp, data);
+  return new Block(nextIndex, previousBlock.hash, nextTimestamp, data, nextHash);
 };
 
 const calculateHashForBlock = (block) => {
-  return calculateHash(block.index, block.previousHash,
-                       block.timestamp, block.data.getDataAsString());
+  return calculateHash(block.index, block.previousHash, block.timestamp, block.data);
 };
 
 const calculateHash = (index, previousHash, timestamp, data) => {
@@ -223,12 +191,6 @@ const handleBlockchainResponse = (message) => {
   const receivedBlocks = JSON.parse(message.data).sort((b1, b2) => (b1.index - b2.index));
   const latestBlockReceived = receivedBlocks[receivedBlocks.length - 1];
   let latestBlockHeld = getLatestBlock();
-
-  console.log('receivedBlocks; ' + JSON.stringify(receivedBlocks));
-  console.log('latestBlockReceived; ' + JSON.stringify(latestBlockReceived));
-  console.log('latestBlockHeld; ' + JSON.stringify(latestBlockHeld));
-
-  latestBlockReceived.data = new Image(latestBlockReceived.data.color);
 
   if (latestBlockReceived.index > latestBlockHeld.index) {
     console.log('blockchain possibly behind. We got: ' + latestBlockHeld.index + ' Peer got: ' + latestBlockReceived.index);
